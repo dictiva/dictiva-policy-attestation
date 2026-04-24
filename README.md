@@ -20,6 +20,48 @@ PCA is a **composition** of existing industry standards, not a greenfield invent
 
 The novel contribution of PCA is the **Commitment Maturity Ladder** (T1 Read → T6 Enforced) and the `PolicyCommitmentCredential` payload that binds an agent to a specific statement at a declared tier.
 
+### Stack at a glance
+
+```mermaid
+flowchart TB
+  classDef external fill:#e8f4ff,stroke:#2563eb,stroke-width:1px,color:#0b1a36
+  classDef pca fill:#fff4e0,stroke:#d97706,stroke-width:1.5px,color:#451a03
+
+  subgraph Transparency["Transparency (optional, Conformance L3)"]
+    SCITT[IETF SCITT<br/>signed receipts]:::external
+  end
+
+  subgraph Compliance["Compliance Export (Conformance L2)"]
+    OSCAL[NIST OSCAL<br/>assessment-results]:::external
+  end
+
+  subgraph Credential["Credential Envelope"]
+    VC[W3C Verifiable Credentials 2.0<br/>+ VC Data Integrity Ed25519<br/>+ VC Status List 2021]:::external
+
+    subgraph Payload["PolicyCommitmentCredential payload"]
+      PCA[Commitment Maturity Ladder T1-T6<br/>+ statementRef + hash<br/>+ scope + refusalRules<br/>+ chainOfAuthority]:::pca
+      Evidence[in-toto Statement/Predicate<br/>+ evidence array per artifact]:::external
+      Scope[W3C ODRL prohibitions<br/>+ constraints]:::external
+    end
+  end
+
+  subgraph Identity["Identity + Auth"]
+    DID[W3C DID<br/>did:web: / did:key:]:::external
+    UAIT[Attestix UAIT Ed25519<br/>optional]:::external
+    MCP[MCP Authorization<br/>OAuth 2.1 + PKCE]:::external
+  end
+
+  DID --> Credential
+  UAIT --> Credential
+  MCP --> Credential
+  PCA --> Evidence
+  PCA --> Scope
+  Credential --> Compliance
+  Credential --> Transparency
+```
+
+Every blue box is an external standard with independent governance. The orange box is PCA's contribution. See [SPEC.md §3 Data model](./SPEC.md#3-data-model) for the normative composition.
+
 ## Status
 
 - **Version**: v0.1 (in draft)
