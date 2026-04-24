@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <id>https://policycommitment.dictiva.com/changelog.atom</id>
+  <title>Policy Commitment Attestation — Changelog</title>
+  <subtitle>Spec changes and release notes for the PCA standard.</subtitle>
+  <link rel="self" href="https://policycommitment.dictiva.com/changelog.atom"/>
+  <link rel="alternate" href="https://policycommitment.dictiva.com/CHANGELOG.html"/>
+  <updated>2026-04-24T00:30:41-04:00</updated>
+  <generator>pca-changelog-atom</generator>
+  <entry>
+    <id>https://policycommitment.dictiva.com/#vUnreleased</id>
+    <title>Policy Commitment Attestation — Unreleased</title>
+    <updated>2026-04-24T00:30:41-04:00</updated>
+    <link rel="alternate" type="text/html" href="https://policycommitment.dictiva.com/CHANGELOG.html"/>
+    <author><name>Policy Commitment Attestation maintainers</name></author>
+    <summary>Changes in Unreleased.</summary>
+    <content type="text">### Added
+
+- Initial v0.1 draft specification: data model, credential type, Commitment Maturity Ladder (T1–T6), evidence type registry, canonical statement hash (JCS / SHA-256), proof format (VC Data Integrity Ed25519), revocation (VC Status List 2021).
+- README with stack overview and maturity ladder.
+- Apache License 2.0.
+- GitHub Pages configuration + CNAME for `policycommitment.dictiva.com`.
+
+### Added (later in v0.1 drafting, 2026-04-24)
+
+- §5 Evidence types — full registry with tier floors + canonical in-toto Statement format.
+- §6 Conformance — three levels (Minimal / OSCAL-exporting / SCITT-publishing).
+- §7.1 OSCAL export — full mapping table from PCA fields to OSCAL `assessment-results`.
+- §7.3 AGENTS.md evidence profile.
+- §7.4 MCP Authorization profile.
+- §8 Security considerations — threat model, key management, replay, tampering, escalation, impersonation, correlation.
+- §9 Privacy considerations — operator linkage, evidence artifact content, revocation privacy.
+- §10 IANA considerations — URI registration requests.
+- Example credentials in `examples/`: T1, T4, T6 progression.
+- Reference implementation guide in `guide/`.
+- CONTRIBUTING.md + GOVERNANCE.md for AAIF-track stewardship.
+
+### Pending
+
+- §7.2 SCITT publishing profile (blocked on SCITT Architecture RFC publication).
+- JSON-LD context definition published at `https://policycommitment.dictiva.com/contexts/policy-commitment/v1` (currently referenced as inline context in the smoke test).
+- VC Status List 2021 publication endpoint at `https://policycommitment.dictiva.com/status/1`.
+- AAIF project proposal submission (Epic E #2305 M3).</content>
+  </entry>
+  <entry>
+    <id>https://policycommitment.dictiva.com/#v0.1.0</id>
+    <title>Policy Commitment Attestation — 0.1.0</title>
+    <updated>2026-04-24T00:30:41-04:00</updated>
+    <link rel="alternate" type="text/html" href="https://policycommitment.dictiva.com/CHANGELOG.html"/>
+    <author><name>Policy Commitment Attestation maintainers</name></author>
+    <summary>Changes in 0.1.0.</summary>
+    <content type="text">First public draft. Intended audience: Dictiva internal implementers, early external reviewers (W3C VC community, MCP working group, in-toto maintainers), and the AAIF Technical Steering Committee once proposal is submitted.
+
+[Unreleased]: https://github.com/dictiva/policy-commitment-attestation/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/dictiva/policy-commitment-attestation/releases/tag/v0.1.0</content>
+  </entry>
+</feed>

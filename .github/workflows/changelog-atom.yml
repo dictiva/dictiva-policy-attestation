@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - CHANGELOG.md
+      - .github/scripts/generate-changelog-atom.py
       - .github/workflows/changelog-atom.yml
   workflow_dispatch:
 
@@ -20,73 +21,7 @@ jobs:
           fetch-depth: 0
 
       - name: Generate Atom feed from CHANGELOG.md
-        run: |
-          python3 - <<'PY'
-          import re
-          import subprocess
-          from datetime import datetime, timezone
-          from pathlib import Path
-          from xml.sax.saxutils import escape
-
-          changelog = Path("CHANGELOG.md").read_text(encoding="utf-8")
-
-          # Split by version headings: "## [x.y.z] — ..." or "## [Unreleased]"
-          entries = []
-          pattern = re.compile(r"^## \[(?P<ver>[^\]]+)\](?:[^\n]*)\n", re.MULTILINE)
-          matches = list(pattern.finditer(changelog))
-          for idx, m in enumerate(matches):
-              start = m.end()
-              end = matches[idx + 1].start() if idx + 1 < len(matches) else len(changelog)
-              body = changelog[start:end].strip()
-              if not body:
-                  continue
-              ver = m.group("ver")
-              # Skip footnote-link-only sections at end
-              if all(line.startswith("[") and "]:" in line for line in body.splitlines() if line.strip()):
-                  continue
-              entries.append({"version": ver, "body": body})
-
-          # Try to get last commit timestamp (shared for all entries in this feed run)
-          try:
-              ts = subprocess.check_output(
-                  ["git", "log", "-1", "--format=%cI", "CHANGELOG.md"]
-              ).decode().strip()
-          except Exception:
-              ts = datetime.now(timezone.utc).isoformat()
-
-          feed_id = "https://policycommitment.dictiva.com/changelog.atom"
-          site_id = "https://policycommitment.dictiva.com/"
-
-          atom_entries = []
-          for e in entries:
-              entry_id = f"{site_id}#v{e['version']}"
-              title = escape(f"Policy Commitment Attestation — {e['version']}")
-              content = escape(e["body"])
-              atom_entries.append(f"""  <entry>
-    <id>{entry_id}</id>
-    <title>{title}</title>
-    <updated>{ts}</updated>
-    <link rel="alternate" type="text/html" href="{site_id}CHANGELOG.html"/>
-    <author><name>Policy Commitment Attestation maintainers</name></author>
-    <summary>Changes in {escape(e['version'])}.</summary>
-    <content type="text">{content}</content>
-  </entry>""")
-
-          atom = f"""<?xml version="1.0" encoding="utf-8"?>
-          <feed xmlns="http://www.w3.org/2005/Atom">
-            <id>{feed_id}</id>
-            <title>Policy Commitment Attestation — Changelog</title>
-            <subtitle>Spec changes and release notes for the PCA standard.</subtitle>
-            <link rel="self" href="{feed_id}"/>
-            <link rel="alternate" href="{site_id}CHANGELOG.html"/>
-            <updated>{ts}</updated>
-            <generator>pca-changelog-atom</generator>
-          {chr(10).join(atom_entries)}
-          </feed>
-          """
-          Path("changelog.atom").write_text(atom, encoding="utf-8")
-          print("Wrote changelog.atom with", len(entries), "entries.")
-          PY
+        run: python3 .github/scripts/generate-changelog-atom.py
 
       - name: Commit + push if changed
         run: |
