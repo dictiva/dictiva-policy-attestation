@@ -1,0 +1,43 @@
+{
+  "@context": [
+    "https://www.w3.org/ns/credentials/v2",
+    "https://dictiva.io/contexts/policy-commitment/v1"
+  ],
+  "id": "urn:uuid:e1f8c9a0-4c4c-4a8e-8f5b-6d7a0f7d2a11",
+  "type": ["VerifiableCredential", "PolicyCommitmentCredential"],
+  "issuer": "did:web:dictiva.io",
+  "validFrom": "2026-04-24T12:00:00Z",
+  "validUntil": "2026-07-24T12:00:00Z",
+  "credentialSubject": {
+    "id": "did:web:dictiva.io:agents:code-reviewer",
+    "commitment": {
+      "statementRef": {
+        "uri": "https://dictiva.com/statements/stmt-security-001",
+        "version": 1,
+        "hash": "sha256:b8a1d2c3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1"
+      },
+      "commitmentTier": "T1",
+      "targetTier": "T4",
+      "evidence": [],
+      "chainOfAuthority": {
+        "issuedBy": "did:web:dictiva.io:users:platform-admin"
+      },
+      "revalidationInterval": "P30D"
+    }
+  },
+  "credentialStatus": {
+    "id": "https://policycommitment.dictiva.com/status/1#42",
+    "type": "StatusList2021Entry",
+    "statusPurpose": "revocation",
+    "statusListIndex": "42",
+    "statusListCredential": "https://policycommitment.dictiva.com/status/1"
+  },
+  "proof": {
+    "type": "DataIntegrityProof",
+    "cryptosuite": "eddsa-rdfc-2022",
+    "created": "2026-04-24T12:00:00Z",
+    "verificationMethod": "did:web:dictiva.io#key-1",
+    "proofPurpose": "assertionMethod",
+    "proofValue": "z3jGwtDYZmSr3u5LY8BmvWSkN4KM9J3s8LxQvV5iUaT6h7W2pLkXmR8VnFcDbE1GqYzsHxPwNxJdKqRtQvB8uF4rA9"
+  }
+}

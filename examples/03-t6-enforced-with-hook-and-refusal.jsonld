@@ -1,0 +1,115 @@
+{
+  "@context": [
+    "https://www.w3.org/ns/credentials/v2",
+    "https://dictiva.io/contexts/policy-commitment/v1",
+    "https://www.w3.org/ns/odrl.jsonld"
+  ],
+  "id": "urn:uuid:c3d4e5f6-7a8b-4c9d-0e1f-2a3b4c5d6e7f",
+  "type": ["VerifiableCredential", "PolicyCommitmentCredential"],
+  "issuer": "did:web:acme.example:tenants:acme",
+  "validFrom": "2026-04-24T12:00:00Z",
+  "validUntil": "2026-07-24T12:00:00Z",
+  "credentialSubject": {
+    "id": "did:web:acme.example:agents:incident-responder",
+    "commitment": {
+      "statementRef": {
+        "uri": "https://acme.example/statements/stmt-prod-change-freeze",
+        "version": 3,
+        "hash": "sha256:7a8b9c0d1e2f3a4b5c6d7e8f90a1b2c3d4e5f60708091011121314151617181920"
+      },
+      "commitmentTier": "T6",
+      "targetTier": "T6",
+      "scope": {
+        "tenants": ["acme"],
+        "entityTypes": ["deployment", "infrastructure"],
+        "actionClasses": ["read", "observe"],
+        "refusalRules": [
+          {
+            "@type": "Prohibition",
+            "action": "deploy",
+            "constraint": [
+              {
+                "leftOperand": "environment",
+                "operator": "eq",
+                "rightOperand": "production"
+              }
+            ],
+            "description": "This agent is prohibited from deploying to production under any circumstances."
+          },
+          {
+            "@type": "Prohibition",
+            "action": "mutate",
+            "constraint": [
+              {
+                "leftOperand": "target",
+                "operator": "isPartOf",
+                "rightOperand": "kv:acme/secrets/*"
+              }
+            ],
+            "description": "Agent cannot mutate anything under secrets namespace."
+          }
+        ]
+      },
+      "evidence": [
+        {
+          "evidenceKind": "memory_file",
+          "reference": ".claude/memory/feedback_prod_change_freeze.md",
+          "description": "Persistent memory entry reinforcing prod-change-freeze",
+          "digest": {
+            "sha256": "abc123def456789012345678901234567890123456789012345678901234567890"
+          }
+        },
+        {
+          "evidenceKind": "adr",
+          "reference": "https://acme.example/adr/ADR-022-change-freeze.md",
+          "description": "ADR-022 — Production change freeze policy"
+        },
+        {
+          "evidenceKind": "hook",
+          "reference": ".claude/settings.json#hooks.PreToolUse[3]",
+          "description": "PreToolUse hook denies deploy_to_production tool calls",
+          "digest": {
+            "sha256": "f1e2d3c4b5a6978685746362514039281716150413121110abcdefabcdef1234"
+          }
+        },
+        {
+          "evidenceKind": "tool_allowlist",
+          "reference": "allowlists/incident-responder-v3.json",
+          "description": "MCP tool allowlist: read-only observability + incident triage, no write tools",
+          "digest": {
+            "sha256": "9876543210abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+          }
+        },
+        {
+          "evidenceKind": "preflight",
+          "reference": "preflight/acme-prod-guard-v2",
+          "description": "Preflight check confirms agent scope before every tool invocation"
+        }
+      ],
+      "chainOfAuthority": {
+        "assemblyId": "ass-acme-change-management-v3",
+        "issuedBy": "did:web:acme.example:users:cto",
+        "approvedBy": [
+          "did:web:acme.example:users:head-of-security",
+          "did:web:acme.example:users:head-of-sre"
+        ]
+      },
+      "revalidationInterval": "P30D"
+    }
+  },
+  "credentialStatus": {
+    "id": "https://acme.example/pca-status/2#17",
+    "type": "StatusList2021Entry",
+    "statusPurpose": "revocation",
+    "statusListIndex": "17",
+    "statusListCredential": "https://acme.example/pca-status/2"
+  },
+  "proof": {
+    "type": "DataIntegrityProof",
+    "cryptosuite": "eddsa-rdfc-2022",
+    "created": "2026-04-24T12:00:10Z",
+    "verificationMethod": "did:web:acme.example:tenants:acme#key-2",
+    "proofPurpose": "assertionMethod",
+    "proofValue": "zZGh8bQ3pLKwRvXnYtM5CfHdA7sEuJ1VqKpGwTmNBrYcXsLaW9iUnDfSqZvPkHxA2bEjOrIzMnCvUaGdTyRpFsXmL"
+  }
+}

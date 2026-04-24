@@ -15,17 +15,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Apache License 2.0.
 - GitHub Pages configuration + CNAME for `policycommitment.dictiva.com`.
 
+### Added (later in v0.1 drafting, 2026-04-24)
+
+- §5 Evidence types — full registry with tier floors + canonical in-toto Statement format.
+- §6 Conformance — three levels (Minimal / OSCAL-exporting / SCITT-publishing).
+- §7.1 OSCAL export — full mapping table from PCA fields to OSCAL `assessment-results`.
+- §7.3 AGENTS.md evidence profile.
+- §7.4 MCP Authorization profile.
+- §8 Security considerations — threat model, key management, replay, tampering, escalation, impersonation, correlation.
+- §9 Privacy considerations — operator linkage, evidence artifact content, revocation privacy.
+- §10 IANA considerations — URI registration requests.
+- Example credentials in `examples/`: T1, T4, T6 progression.
+- Reference implementation guide in `guide/`.
+- CONTRIBUTING.md + GOVERNANCE.md for AAIF-track stewardship.
+
 ### Pending
 
-- §5 Evidence types — full registry (v0.1.1).
-- §6 Conformance — levels (v0.1.1).
-- §7.1 OSCAL export profile (v0.1.2).
-- §7.2 SCITT publishing profile (blocked on SCITT RFC publication).
-- §8 Security considerations.
-- §9 Privacy considerations.
-- Example credentials in `examples/`.
-- Reference implementation guide in `guide/`.
-- JSON-LD context definition at `https://dictiva.io/contexts/policy-commitment/v1`.
+- §7.2 SCITT publishing profile (blocked on SCITT Architecture RFC publication).
+- JSON-LD context definition published at `https://dictiva.io/contexts/policy-commitment/v1` (currently referenced as inline context in the smoke test).
+- VC Status List 2021 publication endpoint at `https://policycommitment.dictiva.com/status/1`.
+- AAIF project proposal submission (Epic E #2305 M3).
 
 ## [0.1.0] — *unreleased*
 

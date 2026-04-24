@@ -1,0 +1,67 @@
+{
+  "@context": [
+    "https://www.w3.org/ns/credentials/v2",
+    "https://dictiva.io/contexts/policy-commitment/v1"
+  ],
+  "id": "urn:uuid:b9c2d3e4-5f6a-4b7c-8d9e-0f1a2b3c4d5e",
+  "type": ["VerifiableCredential", "PolicyCommitmentCredential"],
+  "issuer": "did:web:dictiva.io",
+  "validFrom": "2026-04-24T12:00:00Z",
+  "validUntil": "2026-07-24T12:00:00Z",
+  "credentialSubject": {
+    "id": "did:web:dictiva.io:agents:compliance-attestation",
+    "commitment": {
+      "statementRef": {
+        "uri": "https://dictiva.com/statements/stmt-evidence-integrity-001",
+        "version": 2,
+        "hash": "sha256:a1b2c3d4e5f60708091011121314151617181920212223242526272829303132"
+      },
+      "commitmentTier": "T4",
+      "targetTier": "T4",
+      "evidence": [
+        {
+          "evidenceKind": "adr",
+          "reference": "https://github.com/dictiva/dictiva/blob/main/docs/decisions/040-policy-commitment-attestation.md",
+          "description": "ADR-040 — Policy Commitment Attestation composition decision",
+          "digest": {
+            "sha256": "c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f60708091011121314151617181920abcd"
+          }
+        },
+        {
+          "evidenceKind": "skill",
+          "reference": ".claude/skills/content-integrate/SKILL.md",
+          "description": "Content-integrate skill — creates/updates seed files deterministically",
+          "digest": {
+            "sha256": "d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8091011121314151617181920abcdef0001"
+          }
+        },
+        {
+          "evidenceKind": "pr_commit",
+          "reference": "dictiva/dictiva@0be93961aa87e2606a04f378d3880a1070116d6d",
+          "description": "Merged PR introducing ADR-040"
+        }
+      ],
+      "chainOfAuthority": {
+        "assemblyId": "ass-governance-ops-v1",
+        "issuedBy": "did:web:dictiva.io:users:founder-a",
+        "approvedBy": ["did:web:dictiva.io:users:compliance-officer"]
+      },
+      "revalidationInterval": "P90D"
+    }
+  },
+  "credentialStatus": {
+    "id": "https://policycommitment.dictiva.com/status/1#101",
+    "type": "StatusList2021Entry",
+    "statusPurpose": "revocation",
+    "statusListIndex": "101",
+    "statusListCredential": "https://policycommitment.dictiva.com/status/1"
+  },
+  "proof": {
+    "type": "DataIntegrityProof",
+    "cryptosuite": "eddsa-rdfc-2022",
+    "created": "2026-04-24T12:00:05Z",
+    "verificationMethod": "did:web:dictiva.io#key-1",
+    "proofPurpose": "assertionMethod",
+    "proofValue": "z58nQvRsL4KjPm9bXwYt2xV7Cq3hFg1sDzE6aMk8uH5rBpW4JnT9oU2iGfS7cYdLaQvRsL4KjPm9bXwYt2xV7Cq3"
+  }
+}

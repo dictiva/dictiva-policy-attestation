@@ -142,50 +142,195 @@ Tiers are cumulative. A credential claiming tier N MUST also satisfy the floors 
 
 ## 5. Evidence types
 
-*(TBD: full registry in v0.1.1)*
+Each evidence entry in the `commitment.evidence` array MUST carry a recognized `evidenceKind`. The registry below is extensible: implementations MAY introduce new kinds by registering them at `https://dictiva.io/registry/evidence-kinds/` (or, post-AAIF adoption, the corresponding `aaif.io` URL). Unrecognized kinds MUST NOT cause verification to fail; verifiers SHOULD treat them as opaque carriers whose validity is determined by the associated in-toto Statement + content digest.
 
-Initial registry:
+### 5.1 Canonical format
 
-| Type | Kind | Reference format |
-|---|---|---|
-| `memory_file` | Agent memory artifact | Path + SHA-256 |
-| `agents_md` | Section of AGENTS.md | Path + section anchor + SHA-256 |
-| `adr` | Architecture Decision Record | ADR id + canonical URI |
-| `skill` | Skill definition | Skill name + path + SHA-256 |
-| `hook` | Automation hook config | Config file path + selector |
-| `pr_commit` | Merged pull-request commit | Repo URI + commit SHA |
-| `system_prompt_fragment` | System-prompt injection | SHA-256 + length |
-| `bounded_context` | Scope JSON fragment | SHA-256 |
-| `refusal_rule` | ODRL expression | Inline or URI |
-| `tool_allowlist` | MCP / tool allowlist | Allowlist SHA-256 |
-| `preflight` | Preflight check reference | Check id |
-| `policy_assembly_ref` | Source policy assembly | Assembly id + URI |
+Every evidence entry MUST be expressible as an [in-toto Statement v1](https://github.com/in-toto/attestation/blob/main/spec/v1/statement.md) with:
 
-Evidence entries MUST be expressible as [in-toto Statement](https://github.com/in-toto/attestation/blob/main/spec/v1/statement.md) objects with `predicateType = https://dictiva.io/predicates/policy-commitment-evidence/v1`.
+- `_type` = `https://in-toto.io/Statement/v1`
+- `predicateType` = `https://dictiva.io/predicates/policy-commitment-evidence/v1`
+- `subject[]` referencing the evidence artifact with at least one cryptographic digest (e.g., `sha256`).
+- `predicate` carrying the PCA-specific payload (kind, description, classification metadata).
+
+A conformant credential's inline evidence payload MAY be a shorthand — the registry row's Reference format — when the full in-toto Statement is materialized on request by the issuer.
+
+### 5.2 Registry (v0.1)
+
+| `evidenceKind` | Tier floors | Description | Reference format |
+|---|---|---|---|
+| `memory_file` | T3+ | Agent-persistent memory artifact (markdown / YAML / JSON) | Path + SHA-256 |
+| `agents_md` | T3+ | Section of an AGENTS.md file | Path + section anchor + SHA-256 |
+| `system_prompt_fragment` | T3+ | Identifiable system-prompt injection | SHA-256 + length |
+| `adr` | T4+ | Architecture Decision Record | ADR id + canonical URI |
+| `skill` | T4+ | Agent skill / capability definition | Skill name + path + SHA-256 |
+| `pr_commit` | T4+ | Merged pull-request commit carrying the commitment artifact | Repo URI + commit SHA + branch |
+| `bounded_context` | T5+ | Declarative scope JSON fragment (DDD-style bounded context) | SHA-256 of canonical form |
+| `refusal_rule` | T5+ | ODRL prohibition or obligation expression | Inline JSON-LD or URI |
+| `tool_allowlist` | T6+ | MCP / tool allowlist bound to the agent | Allowlist SHA-256 + issuer |
+| `hook` | T6+ | Automation hook config (pre/post tool use, CI guard, webhook) | Config file path + selector + SHA-256 |
+| `middleware` | T6+ | HTTP / RPC middleware reference | Module id + routing rule |
+| `preflight` | T6+ | Preflight check reference bound to the runtime | Check id + engine + version |
+| `policy_assembly_ref` | T1+ | Source policy assembly (provides chain-of-authority) | Assembly id + issuer URI |
+| `semantic_similarity_report` | T2+ | Cosine / semantic similarity score against statement body | Score + evaluator + transcript digest |
+
+**Tier floors** indicate the *minimum* tier at which a given evidence kind is valid. `memory_file` can satisfy the T3 floor but also appears in T4, T5, T6 credentials. `tool_allowlist` cannot appear at T5 or below.
+
+### 5.3 Evidence resolution
+
+Verifiers MUST be able to recompute any SHA-256 digest referenced by an evidence entry by fetching the artifact at the declared reference URI. Evidence whose digest no longer matches — for example, because the underlying file was edited after the credential was issued — invalidates the credential at the reported tier. Issuers SHOULD revalidate periodically (see §3.5 Revalidation) and emit a new credential when evidence integrity drifts.
 
 ## 6. Conformance
 
-*(TBD v0.1.1 — define conformance levels: Minimal, OSCAL-exporting, SCITT-publishing.)*
+A PCA implementation MAY claim one or more of the following conformance levels.
+
+### 6.1 Level 1 — Minimal
+
+A Minimal implementation:
+
+- MUST issue `PolicyCommitmentCredential`s conforming to §3 (data model).
+- MUST enforce tier floors per §4.
+- MUST support at least the T1, T3, and T4 tiers.
+- MUST support VC Data Integrity proofs with at least the `eddsa-rdfc-2022` cryptosuite.
+- MUST verify VC Status List 2021 revocation entries.
+
+### 6.2 Level 2 — OSCAL-exporting
+
+An OSCAL-exporting implementation additionally:
+
+- MUST support the mapping defined in §7.1.
+- MUST emit valid `assessment-results` OSCAL JSON (per the NIST OSCAL `assessment-results` schema at the cited URL) when requested.
+- MUST round-trip its own credentials: every OSCAL assessment-result emitted MUST reference a verifiable underlying PCA credential.
+
+### 6.3 Level 3 — SCITT-publishing
+
+A SCITT-publishing implementation additionally:
+
+- MUST be able to submit issued credentials to a SCITT Transparency Service per SCRAPI.
+- MUST retain SCITT receipt pointers on the originating credential for retrieval.
+- MAY publish to more than one SCITT TS and retain multiple receipts.
+
+Implementations MAY claim higher levels only when they also satisfy all lower levels.
 
 ## 7. Interop profiles
 
-### 7.1 OSCAL export *(TBD)*
+### 7.1 OSCAL export
 
-Credentials MUST be expressible as OSCAL `assessment-results` components for FedRAMP / NIST-aligned reporting.
+For [NIST OSCAL](https://pages.nist.gov/OSCAL/) (FedRAMP / NIST-aligned reporting), each `PolicyCommitmentCredential` maps to one OSCAL `observation` under an `assessment-results` document. The mapping is as follows:
 
-### 7.2 SCITT publishing *(TBD)*
+| PCA field | OSCAL `assessment-results` field |
+|---|---|
+| `credentialSubject.id` (agent DID) | `observation.subject.subject-uuid` |
+| `credential.issuer` | `observation.origin.actor-uuid` |
+| `commitment.statementRef.uri` | `observation.collected.target` (control-id or statement-id reference) |
+| `commitment.commitmentTier` | `observation.props[{name=pca-tier}]` |
+| `commitment.evidence[]` | `observation.relevant-evidence[]` |
+| `credential.proof` | `observation.origin.related-tasks[]` (as attestation reference) |
+| `validFrom` / `validUntil` | `observation.collected` / `observation.expires` |
+| `credentialStatus` | `observation.props[{name=pca-revocation-status-list}]` |
 
-Credentials MAY be published to an IETF SCITT Transparency Service per [SCRAPI](https://datatracker.ietf.org/doc/draft-ietf-scitt-scrapi/).
+An OSCAL-exporting implementation MUST produce `assessment-results` that validate against the NIST OSCAL JSON schema at the profile level declared by the implementation.
 
-## 8. Security considerations *(TBD)*
+### 7.2 SCITT publishing
 
-## 9. Privacy considerations *(TBD)*
+SCITT publication per [IETF SCRAPI](https://datatracker.ietf.org/doc/draft-ietf-scitt-scrapi/) wraps the issued PCA credential into a signed SCITT Statement submitted to a Transparency Service. The Transparency Service's receipt MAY be retained on the PCA credential as an additional `proof` entry with `type = "TransparencyReceipt"` and `receipt = "<COSE_Sign1 bytes, base64url>"`.
 
-## 10. IANA considerations *(TBD)*
+When SCITT Architecture reaches publication as an RFC, this section will be updated with normative references and the receipt schema.
 
-Request registration of:
-- Credential type: `PolicyCommitmentCredential`
-- Predicate type URI: `https://dictiva.io/predicates/policy-commitment/v1`
+### 7.3 AGENTS.md evidence profile
+
+When `evidenceKind = agents_md`, the reference format is:
+
+- `uri` — canonical URI of the `AGENTS.md` file (e.g., a commit-pinned GitHub permalink).
+- `sectionAnchor` — optional anchor identifying the relevant heading, e.g., `#governance` or `#security-policy`.
+- `digest.sha256` — SHA-256 of the canonical UTF-8 serialization of the referenced section (or, in the absence of an anchor, the whole file).
+
+This profile aligns with the Linux Foundation AAIF-hosted AGENTS.md convention.
+
+### 7.4 MCP Authorization profile
+
+Agents authenticated via the [MCP Authorization Specification](https://modelcontextprotocol.io/specification/2025-11-25) (OAuth 2.1 + PKCE) MAY use the identity-token claim set to populate the credential's `credentialSubject.id` with the authenticated DID. In this profile, the issuer MUST verify the MCP identity token before issuance.
+
+## 8. Security considerations
+
+### 8.1 Threat model
+
+A PCA credential asserts a commitment; it does not guarantee behavior. Verifiers MUST distinguish between:
+
+- **Provenance** — who signed what, when, under which scope. (PCA guarantees this via VC Data Integrity + revocation.)
+- **Enforcement** — whether the runtime actually obeyed the scope + refusal rules. (Out of scope for PCA; enforcement is the tier-6 evidence artifact's job. A T6 credential *references* an enforcement artifact; a verifier must separately confirm that the enforcement artifact is actually active in the runtime.)
+
+### 8.2 Key management
+
+- Issuer keys (tenant DIDs) MUST be rotated on compromise; old credentials MUST be re-issued or listed as revoked per §3.5.
+- Agent-subject DIDs MAY be rotated without re-issuing all prior credentials, provided the old DID remains resolvable to a historical key for verification purposes. Implementations SHOULD document their DID-method's rotation behavior.
+- Keys MUST use Ed25519 at minimum; additional cryptosuites MAY be supported but MUST be standardized (RFC / W3C Rec).
+
+### 8.3 Replay + freshness
+
+- Verifiers MUST reject credentials whose `validFrom` is in the future (clock-skew tolerance MAY be up to 60 seconds).
+- Verifiers MUST reject credentials whose `validUntil` is in the past.
+- Verifiers SHOULD check revocation status on every use; cached revocation responses SHOULD have a TTL no longer than the issuer's declared `revalidationInterval`.
+
+### 8.4 Evidence tampering
+
+- Any evidence artifact that the issuer's digest can no longer match MUST invalidate the credential at the stated tier.
+- Verifiers MUST recompute digests against the current content of each referenced artifact on verification; short-circuiting via cached digests weakens the trust model.
+
+### 8.5 Scope escalation
+
+- Issuers MUST NOT permit a T6-Enforced credential whose `tool_allowlist` exceeds the subject's authenticated MCP permissions.
+- Runtime guardrails referenced as T6 evidence MUST be verifiable as *actively installed* — not merely declared in source control.
+
+### 8.6 Issuer impersonation
+
+- Because PCA issuers are identified by DID, a compromised DID-method resolver (e.g., a compromised `did:web:` host) allows issuer impersonation. Deployments relying on `did:web:` MUST additionally pin issuer public keys out-of-band or use a DID method with cryptographic self-verification (e.g., `did:key:`).
+
+### 8.7 Correlation + tracking
+
+- Credentials identify subject agents by DID. Cross-credential correlation by `credentialSubject.id` is possible and intentional for governance observability. This is not a privacy violation for agents (non-human subjects) but see §9 for human-operator concerns.
+
+## 9. Privacy considerations
+
+### 9.1 Agent subjects
+
+PCA's primary subject is a non-human agent identity. Recording that such an identity has committed to a specific policy statement does not implicate personal data.
+
+### 9.2 Operator linkage
+
+The `chainOfAuthority.issuedBy` and `approvedBy` fields carry DIDs, which may resolve to identifiers for human operators. Implementations MUST evaluate their jurisdiction's privacy requirements (e.g., GDPR, CCPA) before:
+
+- Publishing credentials to public transparency logs (SCITT) that expose operator identity.
+- Sharing credentials across tenant boundaries.
+
+Where necessary, operator DIDs MAY be pseudonymous (e.g., `did:key:` with no off-chain binding to a personal name) while still providing non-repudiation within a tenant.
+
+### 9.3 Evidence artifact content
+
+Evidence artifacts (e.g., `memory_file` content) MAY carry tenant-confidential material. References in PCA credentials MUST therefore be:
+
+- Access-controlled when the artifact URI resolves to restricted content.
+- Content-addressed (via digest) so that verifiers can confirm integrity without the issuer re-exposing the source material.
+
+### 9.4 Revocation privacy
+
+VC Status List 2021 encodes revocation as bit positions in a single published list, which minimizes the metadata leaked per revocation event. Implementations SHOULD prefer Status List 2021 over per-credential revocation endpoints.
+
+## 10. IANA considerations
+
+### 10.1 URI registrations
+
+This specification requests registration of:
+
+- **Credential type URI**: `https://dictiva.io/contexts/policy-commitment/v1#PolicyCommitmentCredential`
+- **Predicate type URI**: `https://dictiva.io/predicates/policy-commitment/v1`
+- **Evidence predicate type URI**: `https://dictiva.io/predicates/policy-commitment-evidence/v1`
+
+On Linux Foundation AAIF adoption, these URIs will migrate to `aaif.io/contexts/policy-commitment/v1#PolicyCommitmentCredential` (etc.), with the original URIs retaining valid historical references.
+
+### 10.2 Media types
+
+No new media types are registered. PCA credentials are served as existing `application/ld+json` (JSON-LD), `application/vc+ld+json` (VC), or `application/oscal-ap+json` (OSCAL).
 
 ## 11. References
 
