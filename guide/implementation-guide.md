@@ -42,7 +42,7 @@ const documentLoader = async (url) => {
 const credential = {
   "@context": [
     "https://www.w3.org/ns/credentials/v2",
-    "https://dictiva.io/contexts/policy-commitment/v1"
+    "https://policycommitment.dictiva.com/contexts/policy-commitment/v1"
   ],
   type: ["VerifiableCredential", "PolicyCommitmentCredential"],
   issuer: issuerDid,

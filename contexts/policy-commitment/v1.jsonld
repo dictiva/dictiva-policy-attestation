@@ -1,0 +1,71 @@
+{
+  "@context": {
+    "@version": 1.1,
+    "@protected": true,
+
+    "pca": "https://policycommitment.dictiva.com/contexts/policy-commitment/v1#",
+    "w3cvc": "https://www.w3.org/ns/credentials/v2#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "odrl": "http://www.w3.org/ns/odrl/2/",
+
+    "PolicyCommitmentCredential": {
+      "@id": "pca:PolicyCommitmentCredential",
+      "@context": {
+        "@version": 1.1,
+        "@protected": true
+      }
+    },
+
+    "commitment": {
+      "@id": "pca:commitment",
+      "@type": "@id",
+      "@context": {
+        "@version": 1.1,
+        "@protected": true,
+
+        "statementRef": {
+          "@id": "pca:statementRef",
+          "@context": {
+            "uri":     { "@id": "pca:statementUri",     "@type": "@id" },
+            "version": { "@id": "pca:statementVersion", "@type": "xsd:integer" },
+            "hash":    { "@id": "pca:statementHash",    "@type": "xsd:string" }
+          }
+        },
+
+        "commitmentTier":      { "@id": "pca:commitmentTier",      "@type": "xsd:string" },
+        "targetTier":          { "@id": "pca:targetTier",          "@type": "xsd:string" },
+        "revalidationInterval":{ "@id": "pca:revalidationInterval","@type": "xsd:duration" },
+
+        "scope": {
+          "@id": "pca:scope",
+          "@context": {
+            "tenants":       { "@id": "pca:scopeTenants",       "@container": "@set" },
+            "entityTypes":   { "@id": "pca:scopeEntityTypes",   "@container": "@set" },
+            "actionClasses": { "@id": "pca:scopeActionClasses", "@container": "@set" },
+            "refusalRules":  { "@id": "pca:scopeRefusalRules",  "@container": "@set" }
+          }
+        },
+
+        "evidence": {
+          "@id": "pca:evidence",
+          "@container": "@set",
+          "@context": {
+            "evidenceKind":{ "@id": "pca:evidenceKind",    "@type": "xsd:string" },
+            "reference":   { "@id": "pca:evidenceReference","@type": "xsd:string" },
+            "description": { "@id": "pca:evidenceDescription","@type": "xsd:string" },
+            "digest":      { "@id": "pca:evidenceDigest" }
+          }
+        },
+
+        "chainOfAuthority": {
+          "@id": "pca:chainOfAuthority",
+          "@context": {
+            "assemblyId":  { "@id": "pca:assemblyId",  "@type": "xsd:string" },
+            "issuedBy":    { "@id": "pca:issuedBy",    "@type": "@id" },
+            "approvedBy":  { "@id": "pca:approvedBy",  "@type": "@id", "@container": "@set" }
+          }
+        }
+      }
+    }
+  }
+}

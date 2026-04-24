@@ -56,7 +56,7 @@ PCA defines a W3C Verifiable Credentials credential type `PolicyCommitmentCreden
 {
   "@context": [
     "https://www.w3.org/ns/credentials/v2",
-    "https://dictiva.io/contexts/policy-commitment/v1"
+    "https://policycommitment.dictiva.com/contexts/policy-commitment/v1"
   ],
   "type": ["VerifiableCredential", "PolicyCommitmentCredential"],
   "issuer": "did:web:example.com",
@@ -93,7 +93,7 @@ PCA defines a W3C Verifiable Credentials credential type `PolicyCommitmentCreden
   "evidence": [
     {
       "type": "https://in-toto.io/Statement/v1",
-      "predicateType": "https://dictiva.io/predicates/policy-commitment-evidence/v1",
+      "predicateType": "https://policycommitment.dictiva.com/predicates/policy-commitment-evidence/v1",
       "subject": [{"uri": "memory/feedback_x.md", "digest": {"sha256": "abc..."}}],
       "predicate": {"evidenceKind": "memory_file", "description": "..."}
     }
@@ -142,14 +142,14 @@ Tiers are cumulative. A credential claiming tier N MUST also satisfy the floors 
 
 ## 5. Evidence types
 
-Each evidence entry in the `commitment.evidence` array MUST carry a recognized `evidenceKind`. The registry below is extensible: implementations MAY introduce new kinds by registering them at `https://dictiva.io/registry/evidence-kinds/` (or, post-AAIF adoption, the corresponding `aaif.io` URL). Unrecognized kinds MUST NOT cause verification to fail; verifiers SHOULD treat them as opaque carriers whose validity is determined by the associated in-toto Statement + content digest.
+Each evidence entry in the `commitment.evidence` array MUST carry a recognized `evidenceKind`. The registry below is extensible: implementations MAY introduce new kinds by registering them at `https://policycommitment.dictiva.com/registry/evidence-kinds/` (or, post-AAIF adoption, the corresponding `aaif.io` URL). Unrecognized kinds MUST NOT cause verification to fail; verifiers SHOULD treat them as opaque carriers whose validity is determined by the associated in-toto Statement + content digest.
 
 ### 5.1 Canonical format
 
 Every evidence entry MUST be expressible as an [in-toto Statement v1](https://github.com/in-toto/attestation/blob/main/spec/v1/statement.md) with:
 
 - `_type` = `https://in-toto.io/Statement/v1`
-- `predicateType` = `https://dictiva.io/predicates/policy-commitment-evidence/v1`
+- `predicateType` = `https://policycommitment.dictiva.com/predicates/policy-commitment-evidence/v1`
 - `subject[]` referencing the evidence artifact with at least one cryptographic digest (e.g., `sha256`).
 - `predicate` carrying the PCA-specific payload (kind, description, classification metadata).
 
@@ -322,9 +322,9 @@ VC Status List 2021 encodes revocation as bit positions in a single published li
 
 This specification requests registration of:
 
-- **Credential type URI**: `https://dictiva.io/contexts/policy-commitment/v1#PolicyCommitmentCredential`
-- **Predicate type URI**: `https://dictiva.io/predicates/policy-commitment/v1`
-- **Evidence predicate type URI**: `https://dictiva.io/predicates/policy-commitment-evidence/v1`
+- **Credential type URI**: `https://policycommitment.dictiva.com/contexts/policy-commitment/v1#PolicyCommitmentCredential`
+- **Predicate type URI**: `https://policycommitment.dictiva.com/predicates/policy-commitment/v1`
+- **Evidence predicate type URI**: `https://policycommitment.dictiva.com/predicates/policy-commitment-evidence/v1`
 
 On Linux Foundation AAIF adoption, these URIs will migrate to `aaif.io/contexts/policy-commitment/v1#PolicyCommitmentCredential` (etc.), with the original URIs retaining valid historical references.
 

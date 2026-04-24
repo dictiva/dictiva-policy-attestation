@@ -32,7 +32,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Pending
 
 - §7.2 SCITT publishing profile (blocked on SCITT Architecture RFC publication).
-- JSON-LD context definition published at `https://dictiva.io/contexts/policy-commitment/v1` (currently referenced as inline context in the smoke test).
+- JSON-LD context definition published at `https://policycommitment.dictiva.com/contexts/policy-commitment/v1` (currently referenced as inline context in the smoke test).
 - VC Status List 2021 publication endpoint at `https://policycommitment.dictiva.com/status/1`.
 - AAIF project proposal submission (Epic E #2305 M3).
 

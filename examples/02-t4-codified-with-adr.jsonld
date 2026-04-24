@@ -1,15 +1,15 @@
 {
   "@context": [
     "https://www.w3.org/ns/credentials/v2",
-    "https://dictiva.io/contexts/policy-commitment/v1"
+    "https://policycommitment.dictiva.com/contexts/policy-commitment/v1"
   ],
   "id": "urn:uuid:b9c2d3e4-5f6a-4b7c-8d9e-0f1a2b3c4d5e",
   "type": ["VerifiableCredential", "PolicyCommitmentCredential"],
-  "issuer": "did:web:dictiva.io",
+  "issuer": "did:web:dictiva.com",
   "validFrom": "2026-04-24T12:00:00Z",
   "validUntil": "2026-07-24T12:00:00Z",
   "credentialSubject": {
-    "id": "did:web:dictiva.io:agents:compliance-attestation",
+    "id": "did:web:dictiva.com:agents:compliance-attestation",
     "commitment": {
       "statementRef": {
         "uri": "https://dictiva.com/statements/stmt-evidence-integrity-001",
@@ -43,8 +43,8 @@
       ],
       "chainOfAuthority": {
         "assemblyId": "ass-governance-ops-v1",
-        "issuedBy": "did:web:dictiva.io:users:founder-a",
-        "approvedBy": ["did:web:dictiva.io:users:compliance-officer"]
+        "issuedBy": "did:web:dictiva.com:users:founder-a",
+        "approvedBy": ["did:web:dictiva.com:users:compliance-officer"]
       },
       "revalidationInterval": "P90D"
     }
@@ -60,7 +60,7 @@
     "type": "DataIntegrityProof",
     "cryptosuite": "eddsa-rdfc-2022",
     "created": "2026-04-24T12:00:05Z",
-    "verificationMethod": "did:web:dictiva.io#key-1",
+    "verificationMethod": "did:web:dictiva.com#key-1",
     "proofPurpose": "assertionMethod",
     "proofValue": "z58nQvRsL4KjPm9bXwYt2xV7Cq3hFg1sDzE6aMk8uH5rBpW4JnT9oU2iGfS7cYdLaQvRsL4KjPm9bXwYt2xV7Cq3"
   }
