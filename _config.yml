@@ -1,0 +1,21 @@
+title: Policy Commitment Attestation
+description: A specification for verifiable AI agent commitments to governance statements — W3C VC + DID + in-toto + OSCAL + MCP Auth + ODRL.
+url: https://policycommitment.dictiva.com
+baseurl: ""
+
+theme: jekyll-theme-cayman
+
+markdown: kramdown
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
+
+plugins:
+  - jekyll-seo-tag
+
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor
+  - .github
