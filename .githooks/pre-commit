@@ -1,0 +1,148 @@
+#!/bin/sh
+# lifecycle-template: hooks/pre-commit
+#
+# pre-commit — secret scan. Refuses a commit that adds a credential, a private
+# key, or a file that exists to hold one.
+#
+# This file is this repository's own. It was copied from a template and calls
+# nothing outside the repository. Do not edit the copy: change the template and
+# re-copy, or the drift check will report this file as behind.
+#
+# Three entry points, one scanner:
+#   pre-commit                 what is staged (this is the git hook)
+#   pre-commit --range A...B   what a revision range adds. The merge gate runs
+#                              this over a pull request, which is how a commit
+#                              made with --no-verify is still caught.
+#   pre-commit --tree DIR      every file under DIR, which may itself be a
+#                              symlink (an agent memory store is one once it is
+#                              linked into the main checkout). Run it before a
+#                              directory is first tracked.
+#
+# A finding prints the file, the line and the NAME of the rule. It never prints
+# the matched text: a scanner that echoes the secret into a terminal or a CI
+# log has leaked it a second time.
+#
+# A scan that cannot finish refuses (exit 2) and names only the stage that
+# failed. "Could not look" is never read as "found nothing".
+#
+# False positive: put "secret-scan: allow" on the same line, in a comment. The
+# marker is visible in review, which is the point.
+#
+# A secret that was ever pushed is burned. Removing it from the file does not
+# un-publish it: rotate it.
+
+set -u
+
+# The rules are ASCII. Under a UTF-8 locale one byte that is not valid UTF-8 (a
+# Latin-1 export, say) makes awk give up on the whole diff and quote the line it
+# choked on, and makes BSD grep skip that line without a word. In the C locale
+# every tool reads bytes.
+LC_ALL=C; export LC_ALL
+
+mode=staged
+target=""
+case "${1:-}" in
+	--range) mode=range; target="${2:?--range needs a revision range}" ;;
+	--tree)  mode=tree;  target="${2:?--tree needs a directory}" ;;
+	"")      : ;;
+	*)       echo "usage: pre-commit [--range A...B | --tree DIR]" >&2; exit 2 ;;
+esac
+
+tmp=$(mktemp -d) || exit 2
+trap 'rm -rf "$tmp"' EXIT
+
+# A text tool that dies tends to quote the line it died on, so awk, grep, cut and
+# sed send their stderr nowhere and a failure is reported by stage name alone.
+# (git's own errors name a revision or a path, never content.)
+broke() { echo "pre-commit: ERROR  the secret scan could not finish ($1); nothing was judged." >&2; exit 2; }
+
+# name<TAB>extended regex. High-confidence shapes first; the last two are
+# deliberately loose and are the ones the allow marker is for.
+cat > "$tmp/rules" <<'RULES'
+private-key-block	-----BEGIN ([A-Z0-9]+ )*PRIVATE KEY( BLOCK)?-----
+aws-access-key-id	(AKIA|ASIA)[0-9A-Z]{16}
+github-token	gh[pousr]_[A-Za-z0-9]{36,}
+github-fine-grained-token	github_pat_[A-Za-z0-9_]{50,}
+anthropic-api-key	sk-ant-[A-Za-z0-9_-]{20,}
+openai-api-key	sk-(proj|svcacct|admin)-[A-Za-z0-9_-]{20,}
+openai-legacy-key	sk-[A-Za-z0-9]{48}
+slack-token	xox[abeprs]-[A-Za-z0-9-]{10,}
+stripe-live-key	(sk|rk)_live_[0-9A-Za-z]{20,}
+google-api-key	AIza[0-9A-Za-z_-]{35}
+sentry-token	sntry[su]_[A-Za-z0-9+/=_-]{30,}
+npm-token	npm_[A-Za-z0-9]{36}
+json-web-token	eyJ[A-Za-z0-9_-]{10,}\.eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}
+assigned-secret	([Ss][Ee][Cc][Rr][Ee][Tt]|[Tt][Oo][Kk][Ee][Nn]|[Pp][Aa][Ss][Ss][Ww]([Oo][Rr])?[Dd]|[Aa][Pp][Ii][_-]?[Kk][Ee][Yy])["']?[[:space:]]*[:=][[:space:]]*["'][A-Za-z0-9/+=_-]{32,}["']
+RULES
+
+# ------------------------------------------------------------------ gather
+# $tmp/lines:  path:line:added text      $tmp/names:  one added/changed path per line
+: > "$tmp/lines"; : > "$tmp/names"
+added_lines() {  # unified diff on stdin -> path:line:text for every added line
+	# "+++ " names a file only in a file header; inside a hunk it is an added
+	# line whose own text starts with "++ ".
+	awk '
+		/^diff --git / { header = 1; next }
+		header && /^\+\+\+ / { path = substr($0, 5); sub(/^b\//, "", path); next }
+		/^@@ /     { header = 0; split($3, a, ","); line = substr(a[1], 2) + 0; next }
+		header     { next }
+		/^\+/      { if (path != "/dev/null") print path ":" line ":" substr($0, 2); line++; next }
+		/^ /       { line++ }
+	'
+}
+changes() {  # git diff arguments -> $tmp/lines and $tmp/names
+	# Everything but a deletion. git pairs a moved file with its old path (R) and,
+	# when a clone asks for it, a copy with its source (C); a symlink swapped for
+	# a file is a type change (T). Each can carry added lines, so none is skipped.
+	git diff --no-color --no-ext-diff -U0 --diff-filter=ACMRT "$@" > "$tmp/diff" || broke "reading the diff"
+	added_lines < "$tmp/diff" > "$tmp/lines" 2>/dev/null || broke "reading the added lines"
+	git diff --name-only --diff-filter=ACMRT "$@" > "$tmp/names" || broke "listing the changed files"
+}
+case "$mode" in
+	staged) changes --cached ;;
+	range)  changes "$target" ;;
+	tree)
+		[ -d "$target" ] || { echo "pre-commit: not a directory: $target" >&2; exit 2; }
+		# grep and find do not enter a symlink named on their command line and
+		# say nothing, which would pass an unread tree. Scan the directory itself.
+		target=$(CDPATH= cd -- "$target" 2>/dev/null && pwd -P) || broke "entering the directory"
+		# -I skips binary files; .git is never content. Status 1 only means there
+		# were no lines to print.
+		rc=0; grep -rIn --exclude-dir=.git -e '' "$target" > "$tmp/lines" 2>/dev/null || rc=$?
+		[ "$rc" -le 1 ] || broke "reading the files"
+		find "$target" -name .git -prune -o -type f -print > "$tmp/names" 2>/dev/null || broke "listing the files" ;;
+esac
+
+# ------------------------------------------------------------------- judge
+: > "$tmp/found"
+rc=0; grep -v 'secret-scan: allow' "$tmp/lines" > "$tmp/scan" 2>/dev/null || rc=$?
+[ "$rc" -le 1 ] || broke "setting aside allowed lines"
+while IFS='	' read -r name regex; do
+	[ -n "$name" ] || continue
+	rc=0; grep -E -e "$regex" "$tmp/scan" > "$tmp/hits" 2>/dev/null || rc=$?
+	[ "$rc" -le 1 ] || broke "matching the $name rule"
+	cut -d: -f1,2 "$tmp/hits" > "$tmp/where" 2>/dev/null || broke "naming a finding"
+	sed "s/\$/  $name/" "$tmp/where" >> "$tmp/found" 2>/dev/null || broke "naming a finding"
+done < "$tmp/rules"
+
+# Files that exist to hold a credential. .env templates are documentation.
+while IFS= read -r path; do
+	base="${path##*/}"
+	case "$base" in
+		.env.example|.env.sample|.env.template|.env.dist) : ;;
+		.env|.env.*)                       echo "$path  env-file" >> "$tmp/found" ;;
+		*.pem|*.p8|*.p12|*.pfx)            echo "$path  key-file" >> "$tmp/found" ;;
+		id_rsa|id_dsa|id_ecdsa|id_ed25519) echo "$path  ssh-private-key-file" >> "$tmp/found" ;;
+		.netrc)                            echo "$path  netrc-file" >> "$tmp/found" ;;
+	esac
+done < "$tmp/names"
+
+[ -s "$tmp/found" ] || exit 0
+
+{
+	echo "pre-commit: REFUSED  secret scan found $(sort -u "$tmp/found" | wc -l | tr -d ' ') problem(s):"
+	sort -u "$tmp/found" | sed 's/^/  /'
+	echo "Remove the secret, and rotate it if it was ever pushed. For a false positive,"
+	echo "put \"secret-scan: allow\" on the same line. Nothing above shows the matched text."
+} >&2
+exit 1

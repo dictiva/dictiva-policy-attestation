@@ -19,3 +19,6 @@ exclude:
   - node_modules
   - vendor
   - .github
+  - .githooks
+  - scripts
+  - AGENTS.md
