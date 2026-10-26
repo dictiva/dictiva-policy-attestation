@@ -1,0 +1,5 @@
+name: Record vendor Node runtime
+description: Report the actual runner-bundled Node version used for JavaScript actions
+runs:
+  using: node24
+  main: index.cjs

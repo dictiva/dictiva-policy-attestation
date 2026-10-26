@@ -4,13 +4,21 @@ This guide walks through implementing a Policy Commitment Attestation (PCA) issu
 
 ## Stack
 
-- **Runtime**: Node.js 20+ (or modern browsers — W3C VC libraries are isomorphic)
+- **Runtime**: Node.js 24 LTS, using 24.22.1 or a later security-patched 24.x release (or modern browsers — W3C VC libraries are isomorphic)
 - **Signing**: [@digitalbazaar/ed25519-signature-2020](https://github.com/digitalbazaar/ed25519-signature-2020) (Ed25519 VC Data Integrity)
 - **VC issuance + verification**: [@digitalbazaar/vc](https://github.com/digitalbazaar/vc)
 - **Document loading**: [@digitalbazaar/security-document-loader](https://github.com/digitalbazaar/security-document-loader) + a custom DID resolver
 - **Canonicalization**: [@digitalbazaar/jsonld-signatures](https://github.com/digitalbazaar/jsonld-signatures) (transitive; uses RDF Dataset Canonicalization)
 
 An alternative TypeScript-native stack is [DIDKit](https://github.com/spruceid/didkit) / Spruce libraries; the interfaces are broadly compatible.
+
+The Node.js recommendation applies to implementations following this guide, not
+to the PCA credential format. [Node.js 24.22.1](https://nodejs.org/en/blog/release/v24.22.1)
+includes the October 2026 security fixes; keep the runtime and implementation
+dependencies updated and validate issuance and verification after upgrades.
+This repository publishes static documentation with Jekyll and has no application
+Node.js runtime. JavaScript GitHub Actions use the runtime bundled with GitHub's
+runner, independently of a developer's Node.js installation.
 
 ## Minimum viable issuer
 

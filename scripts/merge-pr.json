@@ -1,0 +1,7 @@
+{
+  "base": "main",
+  "require_current_base": true,
+  "required_checks": ["Validate documentation"],
+  "local_checks": ["python3 scripts/validate.py", "actionlint"],
+  "secret_scan": ".githooks/pre-commit"
+}
